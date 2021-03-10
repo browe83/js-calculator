@@ -1,5 +1,5 @@
 import './App.css';
-import { Container, Grid, Button, Paper, createMuiTheme, ThemeProvider, useTheme } from '@material-ui/core';
+import { Container, Grid, Button, Paper } from '@material-ui/core';
 import { makeStyles } from '@material-ui/styles';
 import { green } from '@material-ui/core/colors';
 
@@ -38,16 +38,14 @@ const useStyles = makeStyles({
   operation: {
     backgroundColor: green[500],
     '&:hover': {
-        backgroundColor: green[700],
-      },
+      backgroundColor: green[700],
+    },
   }
 })
 
 function App() {
   const classes = useStyles();
-  const theme = useTheme();
-  console.log('theme:', theme);
-  console.log('green:', green);
+
   return (
     <Container className={classes.container}>
        <Grid className={classes.grid} container spacing={1}>
