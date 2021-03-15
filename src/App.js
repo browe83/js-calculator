@@ -74,6 +74,7 @@ function App() {
     const isEquals = input.match(/=/);
     const isDecimal = input.match(/./);
     const isClear = input.match(/AC/);
+    const isFloat = input.match(/^\d*\.?\d*$/);
     const startsWithAngle = input.match(/</);
     if (startsWithAngle) {
       return;
