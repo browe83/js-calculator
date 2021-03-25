@@ -64,19 +64,16 @@ const useStyles = makeStyles({
 function App() {
   const classes = useStyles();
   const [currentToken, setCurrentToken] = useState('0');
-  const [prevInput, setPrevInput] = useState('');
   const [equation, setEquation] = useState('');
   const [answer, setAnswer] = useState(null);
 
   const endsWithOperand = /\d$/;
   const endsWithOperator = /[+-/*]$/;
-  const isDecimal = /^\d*\.?\d*$/;
   const endsWithNegative = /-$/;
   const isNegative = /-/;
-  const endsWithNonNegativeOperator = /[*+/]$/;
   const isOperator = /[*/+-]/;
   const isMultiply = /X/;
-  const isOperand = /\d/;
+  const isInteger = /\d/;
   const isNonNegOperator = /[*+/]/;
 
   const handleOperator = ({ currentTarget: { value } }) => {
@@ -86,72 +83,85 @@ function App() {
     } else {
       input = value;
     }
-    if (endsWithOperand.test(equation) && !equation.includes('=')) {
-      console.log('endWithOperand, conditon 1');
-      setCurrentToken(input);
-      setEquation(equation + input);
-    } else if (
-      isOperand.test(equation.slice(-2, -1)) &&
+    const addOperator = () =>
+      endsWithOperand.test(equation) && !equation.includes('=');
+
+    const replaceOperator = () =>
+      isInteger.test(equation.slice(-2, -1)) &&
       endsWithOperator.test(equation) &&
-      isNonNegOperator.test(input)
-    ) {
-      console.log('condition 2');
-      console.log('equation:', equation);
-      console.log('2nd to last item in equation:', equation.slice(-2, -1));
-      console.log(
-        'endsWIthNonNegOperator:',
-        endsWithNonNegativeOperator.test(equation)
-      );
-      setCurrentToken(input);
-      setEquation(equation.slice(0, -1) + input);
-    } else if (
-      isOperand.test(equation.slice(-2, -1)) &&
+      isNonNegOperator.test(input);
+
+    const addNegative = () =>
+      isInteger.test(equation.slice(-2, -1)) &&
       endsWithOperator.test(equation) &&
-      isNegative.test(input)
-    ) {
-      console.log('condition 3');
-      setEquation(equation + input);
-      setCurrentToken(input);
-    } else if (
+      isNegative.test(input);
+
+    const replaceTwoOperators = () =>
       isOperator.test(equation.slice(-2, -1)) &&
       endsWithNegative.test(equation) &&
-      isNonNegOperator.test(input)
-    ) {
-      console.log('condition 4');
-      setEquation(equation.slice(0, -2) + input);
+      isNonNegOperator.test(input);
+
+    const newEquation = () => equation === '';
+
+    const existingEquation = () => equation.includes('=');
+
+    const onlyOperator = () =>
+      isOperator.test(currentToken) && isOperator.test(equation.slice(-1));
+
+    if (addOperator()) {
       setCurrentToken(input);
-    } else if (
-      isOperator.test(currentToken) &&
-      isOperator.test(equation.slice(-1))
-    ) {
-      console.log('condition 5 operator');
+      setEquation(equation + input);
+      return;
+    }
+
+    if (replaceOperator()) {
       setCurrentToken(input);
       setEquation(equation.slice(0, -1) + input);
-    } else if (equation === '') {
+      return;
+    }
+
+    if (addNegative()) {
+      setEquation(equation + input);
+      setCurrentToken(input);
+      return;
+    }
+
+    if (replaceTwoOperators()) {
+      setEquation(equation.slice(0, -2) + input);
+      setCurrentToken(input);
+      return;
+    }
+
+    if (newEquation()) {
       setCurrentToken(input);
       setEquation(input);
-    } else if (equation.includes('=')) {
-      console.log('handleOperator condition 6');
+      return;
+    }
+
+    if (existingEquation()) {
       setCurrentToken(input);
       setEquation(answer + input);
+      return;
+    }
+
+    if (onlyOperator()) {
+      setCurrentToken(input);
+      setEquation(equation.slice(0, -1) + input);
     }
   };
 
   const handleOperand = ({ currentTarget: { value } }) => {
     const input = value;
     if (
-      (isOperand.test(currentToken) && equation === '') ||
+      (isInteger.test(currentToken) && equation === '') ||
       (currentToken === '0' && equation === '0')
     ) {
-      console.log('handleOperand condition 1');
       setCurrentToken(input);
       setEquation(input);
-    } else if (isOperand.test(currentToken) && currentToken !== '0') {
-      console.log('handleOperand condition 2');
+    } else if (isInteger.test(currentToken) && currentToken !== '0') {
       setCurrentToken(currentToken + input);
       setEquation(equation + input);
     } else if (isOperator.test(currentToken)) {
-      console.log('handleOperand condition 3');
       setCurrentToken(input);
       setEquation(equation + input);
     }
@@ -159,38 +169,33 @@ function App() {
 
   const handleDecimal = ({ currentTarget: { value } }) => {
     const decimal = value;
-    console.log('decimal:', value);
-    console.log('currentToken for decmial:', currentToken);
     if (
       !currentToken.toString().includes('.') &&
-      isOperand.test(currentToken) &&
-      currentToken !== '0'
+      isInteger.test(currentToken) &&
+      currentToken !== '0' &&
+      !equation.includes('=')
     ) {
-      console.log('decimal condition 1:');
       setCurrentToken(currentToken.toString() + decimal);
       setEquation(equation + decimal);
     } else if (isOperator.test(currentToken)) {
-      console.log('test', isOperator.test('.'));
-      console.log('decimal condition 2');
-      console.log('currentToken', currentToken);
       setCurrentToken(`0${decimal}`);
       setEquation(`${equation}0${decimal}`);
+    } else if (equation.includes('=')) {
+      setEquation('0.');
+      setCurrentToken('0.');
     }
   };
 
   const handleClear = () => {
     setEquation('');
-    setPrevInput('');
     setCurrentToken('0');
   };
 
   const handleEval = ({ currentTarget: { value } }) => {
     const input = value;
     console.log('eval:', input);
-    // const numEqualsNum = /\d+=\d+/;
     const startsWithMultiOrDiv = /^[*/]/;
     if (!equation.includes('=') && !startsWithMultiOrDiv.test(equation)) {
-      console.log('handleEval condition 1');
       // eslint-disable-next-line no-eval
       const result = eval(equation);
       setAnswer(result);
